@@ -20,6 +20,7 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 using Microsoft.Bot.Builder.ConnectorEx;
+using DoosanTransChatBot.Models;
 
 namespace doosanTransChatBot
 {
@@ -248,6 +249,14 @@ namespace doosanTransChatBot
                     string orgMent = activity.Text;
 
 
+                    Debug.WriteLine("* activity.Type ==>"+ activity.Text);
+                    Translator textZhKoTranslate = new Translator();
+                    textZhKoTranslate = await DButil.getTranslate(activity.Text);
+         
+                    String tranText = textZhKoTranslate.data.translations[0].translatedText;
+
+                    Debug.WriteLine("* taanText ==>" + tranText);
+
                     apiFlag = "COMMON";
 
                     //대화 시작 시간
@@ -255,253 +264,41 @@ namespace doosanTransChatBot
                     long unixTime = ((DateTimeOffset)startTime).ToUnixTimeSeconds();
 
                     DButil.HistoryLog("orgMent : " + orgMent);
-                    //금칙어 체크
-                    CardList bannedMsg = db.BannedChk(orgMent);
-                    Debug.WriteLine("* bannedMsg : " + bannedMsg.cardText);//해당금칙어에 대한 답변
+ 
+                    queryStr = orgMent;
+                         
+                    string newUserID = activity.Conversation.Id;
+                    string beforeMessgaeText = ""; 
 
-                    if (bannedMsg.cardText != null)
+                    Activity intentNoneReply = activity.CreateReply();
+
+                    var message = MessagesController.queryStr;
+                    beforeMessgaeText = message.ToString();
+
+                    Debug.WriteLine("SERARCH MESSAGE : " + message);
+                
+                    Activity sorryReply = activity.CreateReply();
+ 
+                    HeroCard plCard = new HeroCard()
                     {
-                        Activity reply_ment = activity.CreateReply();
-                        reply_ment.Recipient = activity.From;
-                        reply_ment.Type = "message";
-                        reply_ment.Text = bannedMsg.cardText;
+                        Title = "",
+                        Text = tranText
+                    };
 
-                        var reply_ment_info = await connector.Conversations.SendToConversationAsync(reply_ment);
-                        response = Request.CreateResponse(HttpStatusCode.OK);
-                        return response;
-                    }
-                    else
-                    {
-                        queryStr = orgMent;
-                        //인텐트 엔티티 검출
-                        //캐시 체크
-                        cashOrgMent = Regex.Replace(orgMent, @"[^a-zA-Z0-9ㄱ-힣]", "", RegexOptions.Singleline);
-                        cacheList = db.CacheChk(cashOrgMent.Replace(" ", ""));                     // 캐시 체크
+                    Attachment plAttachment = plCard.ToAttachment();
+                    sorryReply.Attachments.Add(plAttachment);
 
+                    SetActivity(sorryReply);
+                    replyresult = "D";
 
-                        //캐시에 없을 경우
-                        if (cacheList.luisIntent == null || cacheList.luisEntities == null)
-                        {
-                            DButil.HistoryLog("cache none : " + orgMent);
-                            //루이스 체크
-                            cacheList.luisId = dbutil.GetMultiLUIS(orgMent);
-                        }
+                    DateTime endTime = DateTime.Now;
 
-                        if (cacheList != null && cacheList.luisIntent != null)
-                        {
-                            if (cacheList.luisIntent.Contains("testdrive") || cacheList.luisIntent.Contains("branch"))
-                            {
-                                apiFlag = "TESTDRIVE";
-                            }
-                            else if (cacheList.luisIntent.Contains("quot"))
-                            {
-                                apiFlag = "QUOT";
-                            }
-                            else if (cacheList.luisIntent.Contains("recommend "))
-                            {
-                                apiFlag = "RECOMMEND";
-                            }
-                            else
-                            {
-                                apiFlag = "COMMON";
-                            }
-                            DButil.HistoryLog("cacheList.luisIntent : " + cacheList.luisIntent);
-                        }
+                    int dbResult = db.insertUserQuery();
 
-                        luisId = cacheList.luisId;
-                        luisIntent = cacheList.luisIntent;
-                        luisEntities = cacheList.luisEntities;
+                    db.insertHistory(activity.Conversation.Id, activity.ChannelId, ((endTime - MessagesController.startTime).Milliseconds));
+                    replyresult = "";
+                    recommendResult = "";
 
-                        String fullentity = db.SearchCommonEntities;
-                        DButil.HistoryLog("fullentity : " + fullentity);
-                        if (!string.IsNullOrEmpty(fullentity) || !fullentity.Equals(""))
-                        {
-                            if (!String.IsNullOrEmpty(luisEntities))
-                            {
-                                //entity 길이 비교
-                                if (fullentity.Length > luisEntities.Length || luisIntent == null || luisIntent.Equals(""))
-                                {
-                                    //DefineTypeChkSpare에서는 인텐트나 루이스아이디조건 없이 엔티티만 일치하면 다이얼로그 리턴
-                                    relationList = db.DefineTypeChkSpare(fullentity);
-                                }
-                                else
-                                {
-                                    relationList = db.DefineTypeChk(MessagesController.luisId, MessagesController.luisIntent, MessagesController.luisEntities);
-                                }
-                            }
-                            else
-                            {
-                                relationList = db.DefineTypeChkSpare(fullentity);
-                            }
-                        }
-                        else
-                        {
-
-                            if (apiFlag.Equals("COMMON"))
-                            {
-                                relationList = db.DefineTypeChkSpare(cacheList.luisEntities);
-                            }
-                            else
-                            {
-                                relationList = null;
-                            }
-
-                        }
-                        if (relationList != null)
-                        //if (relationList.Count > 0)
-                        {
-                            if (relationList.Count > 0 && relationList[0].dlgApiDefine != null)
-                            {
-                                if (relationList[0].dlgApiDefine.Equals("api testdrive"))
-                                {
-                                    apiFlag = "TESTDRIVE";
-                                }
-                                else if (relationList[0].dlgApiDefine.Equals("api quot"))
-                                {
-                                    apiFlag = "QUOT";
-                                }
-                                else if (relationList[0].dlgApiDefine.Equals("api recommend"))
-                                {
-                                    apiFlag = "RECOMMEND";
-                                }
-                                else if (relationList[0].dlgApiDefine.Equals("D"))
-                                {
-                                    apiFlag = "COMMON";
-                                }
-                                DButil.HistoryLog("relationList[0].dlgApiDefine : " + relationList[0].dlgApiDefine);
-                            }
-
-                        }
-                        else
-                        {
-
-                            if (MessagesController.cacheList.luisIntent == null || apiFlag.Equals("COMMON"))
-                            {
-                                apiFlag = "";
-                            }
-                            else if (MessagesController.cacheList.luisId.Equals("cjchat_luis_01") && MessagesController.cacheList.luisIntent.Contains("quot"))
-                            {
-                                apiFlag = "QUOT";
-                            }
-                        }
-
-                        
-                        if (apiFlag.Equals("COMMON") && relationList.Count > 0)
-                        {
-
-                            //context.Call(new CommonDialog("", MessagesController.queryStr), this.ResumeAfterOptionDialog);
-                            
-                            for (int m = 0; m < MessagesController.relationList.Count; m++)
-                            {
-                                DialogList dlg = db.SelectDialog(MessagesController.relationList[m].dlgId);
-                                Activity commonReply = activity.CreateReply();
-                                Attachment tempAttachment = new Attachment();
-                                DButil.HistoryLog("dlg.dlgType : " + dlg.dlgType);
-                                if (dlg.dlgType.Equals(CARDDLG))
-                                {
-                                    foreach (CardList tempcard in dlg.dialogCard)
-                                    {
-                                        DButil.HistoryLog("tempcard.card_order_no : " + tempcard.card_order_no);
-                                        if (tempAttachment != null)
-                                        {
-                                            commonReply.Attachments.Add(tempAttachment);
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    DButil.HistoryLog("facebook dlg.dlgId : " + dlg.dlgId);
-                                    tempAttachment = dbutil.getAttachmentFromDialog(dlg, activity);
-                                    commonReply.Attachments.Add(tempAttachment);
-
-                                }
-
-                                if (commonReply.Attachments.Count > 0)
-                                {
-                                    SetActivity(commonReply);
-                                    conversationhistory.commonBeforeQustion = orgMent;
-                                    replyresult = "H";
-
-                                }
-                            }
-                        }
-                        else
-                        {
-                            string newUserID = activity.Conversation.Id;
-                            string beforeUserID = "";
-                            string beforeMessgaeText = "";
-                            //string messgaeText = "";
-
-                            Activity intentNoneReply = activity.CreateReply();
-                            Boolean sorryflag = false;
-
-
-                            if (beforeUserID != newUserID)
-                            {
-                                beforeUserID = newUserID;
-                                MessagesController.sorryMessageCnt = 0;
-                            }
-
-                            var message = MessagesController.queryStr;
-                            beforeMessgaeText = message.ToString();
-
-                            Debug.WriteLine("SERARCH MESSAGE : " + message);
-                            //네이버 기사 검색
-                            if (sorryflag)
-                            {
-                                //Sorry Message 
-                                int sorryMessageCheck = db.SelectUserQueryErrorMessageCheck(activity.Conversation.Id, MessagesController.chatBotID);
-
-                                ++MessagesController.sorryMessageCnt;
-
-                                Activity sorryReply = activity.CreateReply();
-
-                                sorryReply.Recipient = activity.From;
-                                sorryReply.Type = "message";
-                                sorryReply.Attachments = new List<Attachment>();
-                                sorryReply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
-
-                                List<TextList> text = new List<TextList>();
-                                if (sorryMessageCheck == 0)
-                                {
-                                    text = db.SelectSorryDialogText("5");
-                                }
-                                else
-                                {
-                                    text = db.SelectSorryDialogText("6");
-                                }
-
-                                for (int i = 0; i < text.Count; i++)
-                                {
-                                    HeroCard plCard = new HeroCard()
-                                    {
-                                        Title = text[i].cardTitle,
-                                        Text = text[i].cardText
-                                    };
-
-                                    Attachment plAttachment = plCard.ToAttachment();
-                                    sorryReply.Attachments.Add(plAttachment);
-                                }
-
-                                SetActivity(sorryReply);
-                                //await connector.Conversations.SendToConversationAsync(sorryReply);
-                                sorryflag = false;
-                                replyresult = "D";
-                            }
-                        }
-
-                        DateTime endTime = DateTime.Now;
-                        //analysis table insert
-                        //if (rc != null)
-                        //{
-                        int dbResult = db.insertUserQuery();
-
-                        //}
-                        //history table insert
-                        db.insertHistory(activity.Conversation.Id, activity.ChannelId, ((endTime - MessagesController.startTime).Milliseconds));
-                        replyresult = "";
-                        recommendResult = "";
-                    }
                 }
                 catch (Exception e)
                 {

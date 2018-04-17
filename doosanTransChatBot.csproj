@@ -151,6 +151,7 @@
     <Compile Include="Models\LuisList.cs" />
     <Compile Include="Models\MediaList.cs" />
     <Compile Include="Models\TextList.cs" />
+    <Compile Include="Models\Translator.cs" />
     <Compile Include="Models\UserHeroCard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -180,7 +181,7 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>True</UseIIS>
+          <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>3979</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>

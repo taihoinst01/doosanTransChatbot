@@ -1,6 +1,7 @@
 ﻿using doosanTransChatBot.Models;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading;
+using DoosanTransChatBot.Models;
 
 namespace doosanTransChatBot.DB
 {
@@ -653,6 +655,28 @@ namespace doosanTransChatBot.DB
             };
 
             return heroCard.ToAttachment();
+        }
+
+        public static async Task<Translator> getTranslate(string input)
+        {
+            Translator trans = new Translator();
+
+            using (HttpClient client = new HttpClient())
+            {
+                string appId = "AIzaSyDr4CH9BVfENdM9uoSK0fANFVWD0gGXlJM";
+
+                string url = string.Format("https://translation.googleapis.com/language/translate/v2/?key={0}&q={1}&source=zh&target=ko&model=nmt", appId, input);
+
+                HttpResponseMessage msg = await client.GetAsync(url);
+
+                if (msg.IsSuccessStatusCode)
+                {
+                    var JsonDataResponse = await msg.Content.ReadAsStringAsync();
+                    trans = JsonConvert.DeserializeObject<Translator>(JsonDataResponse);
+                }
+                return trans;
+            }
+
         }
 
     }
