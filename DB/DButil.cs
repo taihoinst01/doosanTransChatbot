@@ -692,7 +692,7 @@ namespace doosanTransChatBot.DB
             {
                 word = tranText // 챗봇 input message
             };
-
+            DButil.HistoryLog("word : " + item.word);
             DButil.HistoryLog("item : " + item);
 
             string param = JsonConvert.SerializeObject(item); // 객체 json변환
