@@ -293,6 +293,7 @@ namespace doosanTransChatBot
                     db.insertHistory(activity.Conversation.Id, activity.ChannelId, ((endTime - MessagesController.startTime).Milliseconds));
                     replyresult = "";
                     recommendResult = "";
+                    tranText = "";
 
                 }
                 catch (Exception e)
