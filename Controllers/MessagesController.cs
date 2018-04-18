@@ -254,10 +254,10 @@ namespace doosanTransChatBot
                     textZhKoTranslate = await DButil.getTranslate(activity.Text);
          
                     String tranText = textZhKoTranslate.data.translations[0].translatedText;
-
+                    DButil.HistoryLog("taanText 11 ====>" + tranText);
                     //오타 수정
                     tranText = DButil.getEditTypo(tranText);
-
+                    DButil.HistoryLog("taanText 22 ====>" + tranText);
                     Debug.WriteLine("* taanText ==>" + tranText);
 
                     apiFlag = "COMMON";
