@@ -688,6 +688,7 @@ namespace doosanTransChatBot.DB
 
             DButil.HistoryLog("tranText : " + tranText);
 
+            string param = "";
             Item item = new Item
             {
                 word = tranText // 챗봇 input message
@@ -695,7 +696,10 @@ namespace doosanTransChatBot.DB
             DButil.HistoryLog("word : " + item.word);
             DButil.HistoryLog("item : " + item);
 
-            string param = JsonConvert.SerializeObject(item); // 객체 json변환
+            param = JsonConvert.SerializeObject(item); // 객체 json변환
+
+            DButil.HistoryLog("param : " + param);
+
             WebClient webClient = new WebClient(); // 웹 클라이언트 생성
             webClient.Headers[HttpRequestHeader.ContentType] = "application/json"; // 파라미터 json 
             webClient.Encoding = UTF8Encoding.UTF8; // 인코딩 utf8
