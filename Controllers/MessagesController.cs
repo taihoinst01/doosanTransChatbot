@@ -255,6 +255,9 @@ namespace doosanTransChatBot
          
                     String tranText = textZhKoTranslate.data.translations[0].translatedText;
 
+                    //오타 수정
+                    tranText = DButil.getEditTypo(tranText);
+
                     Debug.WriteLine("* taanText ==>" + tranText);
 
                     apiFlag = "COMMON";
@@ -268,15 +271,7 @@ namespace doosanTransChatBot
                     queryStr = orgMent;
                          
                     string newUserID = activity.Conversation.Id;
-                    string beforeMessgaeText = ""; 
 
-                    Activity intentNoneReply = activity.CreateReply();
-
-                    var message = MessagesController.queryStr;
-                    beforeMessgaeText = message.ToString();
-
-                    Debug.WriteLine("SERARCH MESSAGE : " + message);
-                
                     Activity sorryReply = activity.CreateReply();
  
                     HeroCard plCard = new HeroCard()
@@ -350,18 +345,7 @@ namespace doosanTransChatBot
                     {
                         await connector.Conversations.SendToConversationAsync(reply1);
                     }
-                    if (reply2.Attachments.Count != 0 || reply2.Text != "")
-                    {
-                        await connector.Conversations.SendToConversationAsync(reply2);
-                    }
-                    if (reply3.Attachments.Count != 0 || reply3.Text != "")
-                    {
-                        await connector.Conversations.SendToConversationAsync(reply3);
-                    }
-                    if (reply4.Attachments.Count != 0 || reply4.Text != "")
-                    {
-                        await connector.Conversations.SendToConversationAsync(reply4);
-                    }
+                    
                 }
             }
             else

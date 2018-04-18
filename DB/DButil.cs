@@ -3,6 +3,8 @@ using Microsoft.Bot.Connector;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System;
+using System.Net;
+using System.Text;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading;
 using DoosanTransChatBot.Models;
+using CsharpRestCall;
 
 namespace doosanTransChatBot.DB
 {
@@ -677,6 +680,27 @@ namespace doosanTransChatBot.DB
                 return trans;
             }
 
+        }
+
+        public static String getEditTypo(string tranText)
+        {
+            string uri = "https://nmt.azurewebsites.net/api/nmt"; //호출 url
+            Item item = new Item
+            {
+                word = tranText // 챗봇 input message
+            };
+
+            string param = JsonConvert.SerializeObject(item); // 객체 json변환
+            WebClient webClient = new WebClient(); // 웹 클라이언트 생성
+            webClient.Headers[HttpRequestHeader.ContentType] = "application/json"; // 파라미터 json 
+            webClient.Encoding = UTF8Encoding.UTF8; // 인코딩 utf8
+            string responseJSON = webClient.UploadString(uri, param); // api 호출
+
+            Result result = JsonConvert.DeserializeObject<Result>(responseJSON); // 리턴 값(json)을 C# 객체 변환
+            Console.WriteLine(result.code); // 해당 코드 (200: 정상, 400: 파라미터null, 500: 서버에러)
+            Console.WriteLine(result.message); // 수정된 문자 (code가 200일 경우만 해당, 400 혹은 500일 경우는 에러내용)
+
+            return result.message;
         }
 
     }

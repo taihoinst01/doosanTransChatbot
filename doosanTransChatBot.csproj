@@ -138,10 +138,12 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\ConversationHistory.cs" />
+    <Compile Include="Models\item.cs" />
     <Compile Include="Models\RelationList.cs" />
     <Compile Include="Models\CacheList.cs" />
     <Compile Include="Models\CardList.cs" />
     <Compile Include="Models\LinkHeroCard.cs" />
+    <Compile Include="Models\Result.cs" />
     <Compile Include="Models\RootObject.cs" />
     <Compile Include="Models\ConfList.cs" />
     <Compile Include="Models\Search.cs" />
