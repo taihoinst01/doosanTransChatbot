@@ -283,9 +283,9 @@ namespace doosanTransChatBot
                     
 
                     //오타 수정 API
-                    //tranText = DButil.getEditTypo(tranText);
-                    //DButil.HistoryLog("taanText 22 ====>" + tranText);
-                    //Debug.WriteLine("* taanText ==>" + tranText);
+                    string tranText2 = DButil.getEditTypo(tranText);
+                    DButil.HistoryLog("taanText 22 ====>" + tranText);
+                    Debug.WriteLine("* taanText ==>" + tranText);
 
                     apiFlag = "COMMON";
 
