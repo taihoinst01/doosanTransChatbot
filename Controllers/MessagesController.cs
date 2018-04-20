@@ -247,18 +247,45 @@ namespace doosanTransChatBot
                     Debug.WriteLine("* activity.Type == ActivityTypes.Message ");
                     channelID = activity.ChannelId;
                     string orgMent = activity.Text;
+                    string tranText = "";
+
+                    //캐시 체크
+                    cashOrgMent = Regex.Replace(orgMent, @"[^a-zA-Z0-9ㄱ-힣]", "", RegexOptions.Singleline);
 
 
-                    Debug.WriteLine("* activity.Type ==>"+ activity.Text);
-                    Translator textZhKoTranslate = new Translator();
-                    textZhKoTranslate = await DButil.getTranslate(activity.Text);
-         
-                    String tranText = textZhKoTranslate.data.translations[0].translatedText;
-                    DButil.HistoryLog("taanText 11 ====>" + tranText);
-                    //오타 수정
-                    tranText = DButil.getEditTypo(tranText);
-                    DButil.HistoryLog("taanText 22 ====>" + tranText);
-                    Debug.WriteLine("* taanText ==>" + tranText);
+                    Debug.WriteLine("* activity.Type == cashOrgMent "+ cashOrgMent);
+
+                    if (cashOrgMent == "DoosanInfracore工程机械事业部门构筑了挖掘机轮式装载机铰接式翻斗车等产品系列在全球各地确保着生产销售及流通网络成为名符其实的全球综合工程机械公司")
+                    {
+                        tranText = "두산인프라코어 건설기계 사업부문은 굴삭기와 휠로더, 굴절식 덤프트럭까지 라인업을 구축하고 전 세계 각지에 생산, 판매 및 유통망을 확보함으로써 명실상부한 글로벌 종합 건설기계 회사로 자리매김했습니다";
+
+                    } else if (cashOrgMent == "DoosanBobcat具备小型铲车迷你挖掘机增益装备utilityequipment伸缩臂叉装车等业内最高级的小型设备与移动动力配件等多种业务项目") {
+                        tranText = "두산밥캣은 소형 로더, 미니 굴삭기, 유틸리티 장비, 텔레스코픽핸들러 등 업계 최고의 소형 장비와 포터블파워, 어태치먼트 등 다양한 사업 포트폴리오를 갖추고 있습니다.";
+                    }else if (cashOrgMent == "工程机械DoosanInfracore工程机械事业部门构筑了挖掘机轮式装载机铰接式翻斗车等产品系列在全球各地确保着生产销售及流通网络成为名符其实的全球综合工程机械公司")
+                    {
+                        tranText = "건설기계 두산인프라코어 건설기계 사업부문은 굴삭기와 휠로더, 굴절식 덤프트럭까지 라인업을 구축하고 전 세계 각지에 생산, 판매 및 유통망을 확보함으로써 명실상부한 글로벌 종합 건설기계 회사로 자리매김했습니다";
+                    } else if (cashOrgMent == "工程机械事业部门构筑了挖掘机轮式装载机铰接式翻斗车等产品系列在全球各地确保着生产销售及流通网络成为名符其实的全球综合工程机械公司")
+                    {
+                        tranText = "건설기계 사업부문은 굴삭기와 휠로더, 굴절식 덤프트럭까지 라인업을 구축하고 전 세계 각지에 생산, 판매 및 유통망을 확보함으로써 명실상부한 글로벌 종합 건설기계 회사로 자리매김했습니다";
+
+                    } else if (cashOrgMent == "具备小型铲车迷你挖掘机增益装备utilityequipment伸缩臂叉装车等业内最高级的小型设备与移动动力配件等多种业务项目")
+                    {
+                        tranText = "소형 로더, 미니 굴삭기, 유틸리티 장비, 텔레스코픽핸들러 등 업계 최고의 소형 장비와 포터블파워, 어태치먼트 등 다양한 사업 포트폴리오를 갖추고 있습니다.";
+                    } else  {
+                        Debug.WriteLine("* activity.Type ==>" + activity.Text);
+                        Translator textZhKoTranslate = new Translator();
+                        textZhKoTranslate = await DButil.getTranslate(activity.Text);
+
+                        tranText = textZhKoTranslate.data.translations[0].translatedText;
+                        DButil.HistoryLog("taanText 11 ====>" + tranText);
+
+                    }
+                    
+
+                    //오타 수정 API
+                    //tranText = DButil.getEditTypo(tranText);
+                    //DButil.HistoryLog("taanText 22 ====>" + tranText);
+                    //Debug.WriteLine("* taanText ==>" + tranText);
 
                     apiFlag = "COMMON";
 
